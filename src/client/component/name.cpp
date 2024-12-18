@@ -14,7 +14,7 @@ namespace name
         const char* GetPlayerDvarName()
         {
             const auto nameDvar = game::Dvar_FindVar("name");
-            if (!nameDvar || game::Dvar_FindVar("name")->current.string == nullptr)
+            if (!nameDvar || nameDvar->current.string == nullptr || !strcmp(nameDvar->current.string, ""))
                 return "Unknown Soldier";
 
             return nameDvar->current.string;
