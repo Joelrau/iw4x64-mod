@@ -13,7 +13,7 @@ namespace demonware
 		void bd_logger_stub(int /*type*/, const char* const /*channelName*/, const char*, const char* const /*file*/,
 		                    const char* const function, const unsigned int /*line*/, const char* const msg, ...)
 		{		
-			static const auto* bd_logger_enabled = game::Dvar_RegisterBool("bd_logger_enabled", false, game::DVAR_FLAG_NONE);
+			static const auto* bd_logger_enabled = game::Dvar_RegisterBool("bd_logger_enabled", false, game::DVAR_NONE, "Enable logging of DemonWare Services");
 			if (!bd_logger_enabled->current.enabled)
 			{
 				return;

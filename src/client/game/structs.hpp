@@ -31,13 +31,24 @@ namespace game
 
 	enum DvarFlags : std::uint32_t
 	{
-		DVAR_FLAG_NONE = 0,
-		DVAR_FLAG_SAVED = 0x1,
-		DVAR_FLAG_LATCHED = 0x2,
-		DVAR_FLAG_CHEAT = 0x4,
-		DVAR_FLAG_REPLICATED = 0x8,
-		DVAR_FLAG_WRITE = 0x800,
-		DVAR_FLAG_READ = 0x2000,
+		DVAR_NONE = 0,	// No flags
+		DVAR_ARCHIVE = 1 << 0,	// Set to cause it to be saved to config_mp.cfg of the client
+		DVAR_LATCH = 1 << 1,	// Will only change when C code next does a Dvar_Get(), so it can't be changed
+		// without proper initialization. Modified will be set, even though the value hasn't changed yet
+		DVAR_CHEAT = 1 << 2,	// Can not be changed if cheats are disabled
+		DVAR_CODINFO = 1 << 3,	// On change, this is sent to all clients (if you are host)
+		DVAR_SCRIPTINFO = 1 << 4,
+		DVAR_TEMP = 1 << 5, // Best educated guess
+		DVAR_SAVED = 1 << 6,
+		DVAR_INTERNAL = 1 << 7, // Best educated guess
+		DVAR_EXTERNAL = 1 << 8,	// Created by a set command
+		DVAR_USERINFO = 1 << 9,	// Sent to server on connect or change
+		DVAR_SERVERINFO = 1 << 10, // Sent in response to front end requests
+		DVAR_INIT = 1 << 11, // Don't allow change from console at all
+		DVAR_SYSTEMINFO = 1 << 12, // Will be duplicated on all clients
+		DVAR_ROM = 1 << 13, // Display only, cannot be set by user at all
+		DVAR_CHANGEABLE_RESET = 1 << 14,
+		DVAR_AUTOEXEC = 1 << 15, // isLoadingAutoExecGlobalFlag is always false so it should be never set by the game
 	};
 
 	enum dvar_type : std::int8_t
@@ -93,11 +104,11 @@ namespace game
 
 	struct dvar_t
 	{
-		const char* name; //00
-		unsigned int flags; //08
-		dvar_type type; //0C
-		bool modified; //0D
-		dvar_value current; //10
+		const char* name;
+		unsigned int flags;
+		dvar_type type;
+		bool modified;
+		dvar_value current;
 		dvar_value latched;
 		dvar_value reset;
 		dvar_limits domain;

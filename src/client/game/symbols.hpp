@@ -12,9 +12,10 @@ namespace game
 
 	WEAK symbol<void()> Com_Quit_f{ 0x1401FB240 };
 
-	WEAK symbol<dvar_t*(const char* name, bool value, unsigned int flags)> Dvar_RegisterBool { 0x140287CE0 };
-	WEAK symbol<dvar_t*(const char* name, int value, int min, int max, unsigned int flags)> Dvar_RegisterInt { 0x1402881F0 };
-	WEAK symbol<dvar_t*(const char* name, const char* value, unsigned int flags)> Dvar_RegisterString { 0x1402881F0 };
+	WEAK symbol<dvar_t*(const char* name, bool value, unsigned int flags, const char* desc)> Dvar_RegisterBool { 0x140287CE0 };
+	WEAK symbol<dvar_t*(const char* name, float value, float min, float max, unsigned int flags, const char* desc)> Dvar_RegisterFloat { 0x1402880C0 };
+	WEAK symbol<dvar_t*(const char* name, int value, int min, int max, unsigned int flags, const char* desc)> Dvar_RegisterInt { 0x1402881F0 };
+	WEAK symbol<dvar_t*(const char* name, const char* value, unsigned int flags, const char* desc)> Dvar_RegisterString { 0x140288590 };
 	WEAK symbol<dvar_t*(const char* name)> Dvar_FindVar { 0x140287170 };
 
 
