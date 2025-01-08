@@ -6,6 +6,7 @@
 #include <utils/hook.hpp>
 #include <utils/string.hpp>
 
+#include "console.hpp"
 #include "dvars.hpp"
 
 namespace patches
@@ -46,6 +47,27 @@ namespace patches
 
 			relaunch_hook.invoke<void>(filename, params);
 		}
+
+		utils::hook::detour alt_tab_hook;
+		bool alt_tab_stub()
+		{
+			return true;	
+		}
+
+		utils::hook::detour com_error_hook;
+		void com_error_stub(const int error, const char* msg, ...)
+		{
+			char buffer[2048]{};
+			va_list ap;
+
+			va_start(ap, msg);
+			vsnprintf_s(buffer, _TRUNCATE, msg, ap);
+			va_end(ap);
+
+			console::error("Error: %s\n", buffer);
+
+			com_error_hook.invoke<void>(error, "%s", buffer);
+		}
 	}
 
 	class component final : public component_interface
@@ -57,6 +79,15 @@ namespace patches
 
 			if (game::environment::is_sp())
 				return;
+
+			patch_mp();
+		}
+
+		static void patch_mp()
+		{
+			alt_tab_hook.create(0x1402A7C10, alt_tab_stub);
+
+			utils::hook::copy_string(0x14040B020, "IW4x64-Mod Multiplayer");
 
 			dvars::override::register_float("cg_fov", 65.f, 40.f, 200.f, game::DvarFlags::DVAR_SAVED);
 			dvars::override::register_float("cg_fovScale", 1.f, 0.1f, 2.f, game::DvarFlags::DVAR_SAVED);
@@ -70,13 +101,10 @@ namespace patches
 			{
 				dvars::override::register_int("com_maxfps", 0, 0, 1000, game::DVAR_SAVED);
 			}
-
-			patch_mp();
-		}
-
-		static void patch_mp()
-		{
+			
 			dvars::override::register_string("sv_hostname", "^2IW4x64-Mod^7 Default Server", game::DVAR_CODINFO);
+
+			com_error_hook.create(game::Com_Error, com_error_stub);
 		}
 	};
 }

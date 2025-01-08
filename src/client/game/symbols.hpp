@@ -1,6 +1,7 @@
 #pragma once
 
 #define WEAK __declspec(selectany)
+#include "structs.hpp"
 
 namespace game
 {
@@ -56,7 +57,23 @@ namespace game
 	WEAK symbol<void()> Com_EndTokenizeString{0x1401ECC10 };
 	WEAK symbol<const char*(int index)> Cmd_Argv{0x140035D60 };
 	WEAK symbol<void(const char* dvarName, const char* buffer)> Dvar_SetCommand { 0x1402892A0 };
-	
+	WEAK symbol<const char*(const char* filename, const char* extFilename)> Scr_AddSourceBuffer { 0x140222140 };
+
+	WEAK symbol<void()> Scr_LoadGameType { 0x1401ABDD0 };
+	WEAK symbol<void()> Scr_StartupGameType { 0x1401AC4F0 };
+	WEAK symbol<void()> GScr_LoadGameTypeScript { 0x1401AAE90 };
+	WEAK symbol<__int64(int handle, unsigned int paramcount)> Scr_ExecThread { 0x14022CF10 };
+	WEAK symbol<void(unsigned __int16 handle)> Scr_FreeThread { 0x14022CFA0 };
+	WEAK symbol<const char**(const char* path, const char* extension, FsListBehavior_e behavior, int* numfiles, int allocTrackType)> FS_ListFiles { 0x14027B0F0 };
+
+	WEAK symbol<unsigned int(const char* path)> Scr_LoadScript { 0x1402211B0 };
+	WEAK symbol<unsigned int(const char* path, char* a2, int a3)> Scr_LoadScriptInternal { 0x140221380 };
+	WEAK symbol<int(const char* filename, const char* name)> Scr_GetFunctionHandle { 0x140221080 };
+	WEAK symbol<void(const char** list, int allocTrackType)> FSFreeFileList { 0x14027B0E0 };
+	WEAK symbol<void*(int size)> Hunk_AllocateTempMemoryHigh { 0x1402814B0 };
+	WEAK symbol<int(RawFile* rawfile)> DB_GetRawFileLen { 0x140129A00 };
+	WEAK symbol<void(RawFile* rawfile, char* buffer, int size)> DB_GetRawBuffer { 0x1401298D0 };
+
 	/***************************************************************
 	 * Variables
 	 **************************************************************/
@@ -71,4 +88,8 @@ namespace game
 
 	WEAK symbol<XAssetEntry> EntryPool { 0x141567FD0 };
 	WEAK symbol<unsigned short> db_hashTable { 0x141551E90 };
+
+	WEAK symbol<bool> g_loadedImpureScript { 0x141F4A304 };
+
+	WEAK symbol<gentity_s> g_entities { 0x1418B4750 };
 }

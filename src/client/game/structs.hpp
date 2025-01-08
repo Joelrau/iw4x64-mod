@@ -398,6 +398,14 @@ namespace game
 		int rowCount;
 		StringTableCell* values;
 	};
+
+	struct RawFile
+	{
+		const char* name;
+		int compressedLen;
+		int len;
+		const char* buffer;
+	};
 	
 	union XAssetHeader
 	{
@@ -405,6 +413,7 @@ namespace game
 		Material* material;
 		Font_s* font;
 		StringTable* stringTable;
+		RawFile* rawFile;
 	};
 	
 	struct XAsset
@@ -421,5 +430,841 @@ namespace game
 		bool printedMissingAsset;
 		unsigned short nextHash;
 		unsigned short nextOverride;
+	};
+
+	enum FsListBehavior_e
+	{
+		FS_LIST_PURE_ONLY = 0x0,
+		FS_LIST_ALL = 0x1,
+	};
+
+	enum fsMode_t
+	{
+		FS_READ = 0x0,
+		FS_WRITE = 0x1,
+		FS_APPEND = 0x2,
+		FS_APPEND_SYNC = 0x3,
+	};
+
+	struct scr_entref_t
+	{
+		unsigned __int16 entnum;
+		unsigned __int16 classnum;
+	};
+	
+	typedef void(*BuiltinFunction)();
+	typedef void(*BuiltinMethod)(scr_entref_t);
+
+	struct ScriptFunction
+	{
+		BuiltinFunction actionFunc;
+		bool type;
+		std::vector<std::string> aliases;
+	};
+
+	struct ScriptMethod
+	{
+		game::BuiltinMethod actionFunc;
+		bool type;
+		std::vector<std::string> aliases;
+	};
+
+	enum
+	{
+		VAR_UNDEFINED = 0x0,
+		VAR_BEGIN_REF = 0x1,
+		VAR_POINTER = 0x1,
+		VAR_STRING = 0x2,
+		VAR_ISTRING = 0x3,
+		VAR_VECTOR = 0x4,
+		VAR_END_REF = 0x5,
+		VAR_FLOAT = 0x5,
+		VAR_INTEGER = 0x6,
+		VAR_CODEPOS = 0x7,
+		VAR_PRECODEPOS = 0x8,
+		VAR_FUNCTION = 0x9,
+		VAR_BUILTIN_FUNCTION = 0xA,
+		VAR_BUILTIN_METHOD = 0xB,
+		VAR_STACK = 0xC,
+		VAR_ANIMATION = 0xD,
+		VAR_DEVELOPER_CODEPOS = 0xE,
+		VAR_PRE_ANIMATION = 0xF,
+		VAR_THREAD = 0x10,
+		VAR_NOTIFY_THREAD = 0x11,
+		VAR_TIME_THREAD = 0x12,
+		VAR_CHILD_THREAD = 0x13,
+		VAR_OBJECT = 0x14,
+		VAR_DEAD_ENTITY = 0x15,
+		VAR_ENTITY = 0x16,
+		VAR_ARRAY = 0x17,
+		VAR_DEAD_THREAD = 0x18,
+		VAR_COUNT = 0x19,
+		VAR_THREAD_LIST = 0x1A,
+		VAR_ENDON_LIST = 0x1B,
+	};
+
+	struct clientLinkInfo_t
+	{
+		__int16 parentId;
+		char tagName;
+		char flags;
+	};
+
+	enum trType_t
+	{
+		TR_STATIONARY = 0x0,
+		TR_INTERPOLATE = 0x1,
+		TR_LINEAR = 0x2,
+		TR_LINEAR_STOP = 0x3,
+		TR_SINE = 0x4,
+		TR_GRAVITY = 0x5,
+		TR_LOW_GRAVITY = 0x6,
+		TR_ACCELERATE = 0x7,
+		TR_DECELERATE = 0x8,
+		TR_PHYSICS = 0x9,
+		TR_FIRST_RAGDOLL = 0xA,
+		TR_RAGDOLL = 0xA,
+		TR_RAGDOLL_GRAVITY = 0xB,
+		TR_RAGDOLL_INTERPOLATE = 0xC,
+		TR_LAST_RAGDOLL = 0xC,
+		NUM_TRTYPES = 0xD,
+	};
+
+	struct trajectory_t
+	{
+		trType_t trType;
+		int trTime;
+		int trDuration;
+		float trBase[3];
+		float trDelta[3];
+	};
+
+	struct LerpEntityState
+	{
+		int eFlags;
+		trajectory_t pos;
+		trajectory_t apos;
+		char pad0[0x24];
+	};
+
+	struct Bounds
+	{
+		float midPoint[3];
+		float halfSize[3];
+	};
+
+	struct entityState_s
+	{
+		int number;
+		int eType;
+		LerpEntityState lerp;
+		int time2;
+		int otherEntityNum;
+		int attackerEntityNum;
+		int groundEntityNum;
+		int loopSound;
+		int surfType;
+		union
+		{
+			int brushModel;
+			int triggerModel;
+			int item;
+			int xmodel;
+			int primaryLight;
+		} index;
+		int clientNum;
+		int iHeadIcon;
+		int iHeadIconTeam;
+		int solid;
+		unsigned int eventParm;
+		int eventSequence;
+		int events[4];
+		unsigned int eventParms[4];
+		unsigned __int16 weapon;
+		int legsAnim;
+		int torsoAnim;
+		union
+		{
+			int eventParm2;
+			int hintString;
+			int fxId;
+			int helicopterStage;
+		} un1;
+		union
+		{
+			int hintType;
+			struct
+			{
+				unsigned __int16 vehicleXModel;
+				char weaponModel;
+			} __s1;
+			int actorFlags;
+		} un2;
+		clientLinkInfo_t clientLinkInfo;
+		unsigned int partBits[6];
+		int clientMask[1];
+	};
+
+	struct EntHandle
+	{
+		unsigned __int16 number;
+		unsigned __int16 infoIndex;
+	};
+
+	struct entityShared_t
+	{
+		char isLinked;
+		char modelType;
+		char svFlags;
+		char isInUse;
+		Bounds box;
+		int contents;
+		Bounds absBox;
+		float currentOrigin[3];
+		float currentAngles[3];
+		EntHandle ownerNum;
+		int eventTime;
+	};
+
+	enum hintType_t
+	{
+		HINT_NONE = 0x0,
+		HINT_NOICON = 0x1,
+		HINT_ACTIVATE = 0x2,
+		HINT_HEALTH = 0x3,
+		HINT_FRIENDLY = 0x4,
+		FIRST_WEAPON_HINT = 0x5,
+		LAST_WEAPON_HINT = 0x57C,
+		HINT_NUM_HINTS = 0x57D,
+	};
+
+	enum team_t
+	{
+		TEAM_FREE = 0x0,
+		TEAM_AXIS = 0x1,
+		TEAM_ALLIES = 0x2,
+		TEAM_SPECTATOR = 0x3,
+		TEAM_NUM_TEAMS = 0x4,
+	};
+
+	struct clientState_s
+	{
+		int clientIndex;
+		team_t team;
+		int modelindex;
+		int dualWielding;
+		int riotShieldNext;
+		int attachModelIndex[6];
+		int attachTagIndex[6];
+		char name[16];
+		float maxSprintTimeMultiplier;
+		int rank;
+		int prestige;
+		unsigned int perks[2];
+		int diveState;
+		int voiceConnectivityBits;
+		unsigned int playerCardIcon;
+		unsigned int playerCardTitle;
+		unsigned int playerCardNameplate;
+	};
+
+	struct playerTeamState_t
+	{
+		int location;
+	};
+
+	enum usercmdButtonBits
+	{
+		CMD_BUTTON_ATTACK = 1 << 0,
+		CMD_BUTTON_SPRINT = 1 << 1,
+		CMD_BUTTON_MELEE = 1 << 2,
+		CMD_BUTTON_ACTIVATE = 1 << 3,
+		CMD_BUTTON_RELOAD = 1 << 4,
+		CMD_BUTTON_USE_RELOAD = 1 << 5,
+		CMD_BUTTON_LEAN_LEFT = 1 << 6,
+		CMD_BUTTON_LEAN_RIGHT = 1 << 7,
+		CMD_BUTTON_PRONE = 1 << 8,
+		CMD_BUTTON_CROUCH = 1 << 9,
+		CMD_BUTTON_UP = 1 << 10,
+		CMD_BUTTON_ADS = 1 << 11,
+		CMD_BUTTON_DOWN = 1 << 12,
+		CMD_BUTTON_BREATH = 1 << 13,
+		CMD_BUTTON_FRAG = 1 << 14,
+		CMD_BUTTON_OFFHAND_SECONDARY = 1 << 15,
+		CMD_BUTTON_THROW = 1 << 19,
+	};
+
+	struct usercmd_s
+	{
+		int serverTime;
+		int buttons;
+		int angles[3];
+		unsigned __int16 weapon;
+		unsigned __int16 primaryWeaponForAltMode;
+		unsigned __int16 offHandIndex;
+		char forwardmove;
+		char rightmove;
+		float meleeChargeYaw;
+		char meleeChargeDist;
+		char selectedLoc[2];
+		char selectedLocAngle;
+		char remoteControlAngles[2];
+	};
+
+	static_assert(sizeof(usercmd_s) == 0x28);
+
+	enum clientConnected_t
+	{
+		CON_DISCONNECTED = 0x0,
+		CON_CONNECTING = 0x1,
+		CON_CONNECTED = 0x2
+	};
+
+	enum sessionState_t
+	{
+		SESS_STATE_PLAYING = 0x0,
+		SESS_STATE_DEAD = 0x1,
+		SESS_STATE_SPECTATOR = 0x2,
+		SESS_STATE_INTERMISSION = 0x3
+	};
+	
+	struct clientSession_t
+	{
+		sessionState_t sessionState;
+		int forceSpectatorClient;
+		int killCamEntity;
+		int killCamLookAtEntity;
+		int status_icon;
+		int archiveTime;
+		int score;
+		int deaths;
+		int kills;
+		int assists;
+		unsigned __int16 scriptPersId;
+		clientConnected_t connected;
+		usercmd_s cmd;
+		usercmd_s oldcmd;
+		int localClient;
+		int predictItemPickup;
+		char newnetname[16];
+		int maxHealth;
+		int enterTime;
+		playerTeamState_t teamState;
+		int voteCount;
+		int teamVoteCount;
+		float moveSpeedScaleMultiplier;
+		int viewmodelIndex;
+		int noSpectate;
+		int teamInfo;
+		clientState_s cs;
+		int psOffsetTime;
+		int hasRadar;
+		int isRadarBlocked;
+		int radarMode;
+		int weaponHudIconOverrides[6];
+		unsigned int unusableEntFlags[64];
+		float spectateDefaultPos[3];
+		float spectateDefaultAngles[3];
+	};
+
+	enum OffhandClass
+	{
+		OFFHAND_CLASS_NONE = 0x0,
+		OFFHAND_CLASS_FRAG_GRENADE = 0x1,
+		OFFHAND_CLASS_SMOKE_GRENADE = 0x2,
+		OFFHAND_CLASS_FLASH_GRENADE = 0x3,
+		OFFHAND_CLASS_THROWINGKNIFE = 0x4,
+		OFFHAND_CLASS_OTHER = 0x5,
+		OFFHAND_CLASS_COUNT = 0x6,
+	};
+
+	enum ViewLockTypes
+	{
+		PLAYERVIEWLOCK_NONE = 0x0,
+		PLAYERVIEWLOCK_FULL = 0x1,
+		PLAYERVIEWLOCK_WEAPONJITTER = 0x2,
+		PLAYERVIEWLOCKCOUNT = 0x3,
+	};
+
+	struct SprintState
+	{
+		int sprintButtonUpRequired;
+		int sprintDelay;
+		int lastSprintStart;
+		int lastSprintEnd;
+		int sprintStartMaxLength;
+	};
+
+	struct MantleState
+	{
+		float yaw;
+		int timer;
+		int transIndex;
+		int flags;
+	};
+
+	struct PlayerActiveWeaponState
+	{
+		int weapAnim;
+		int weaponTime;
+		int weaponDelay;
+		int weaponRestrictKickTime;
+		int weaponState;
+		int weapHandFlags;
+		unsigned int weaponShotCount;
+	};
+
+	struct PlayerEquippedWeaponState
+	{
+		bool usedBefore;
+		bool dualWielding;
+		char weaponModel;
+		bool needsRechamber[2];
+	};
+
+	struct GlobalAmmo
+	{
+		int ammoType;
+		int ammoCount;
+	};
+
+	struct ClipAmmo
+	{
+		int clipIndex;
+		int ammoCount[2];
+	};
+
+	enum PlayerHandIndex
+	{
+		WEAPON_HAND_RIGHT = 0x0,
+		WEAPON_HAND_LEFT = 0x1,
+		NUM_WEAPON_HANDS = 0x2,
+		WEAPON_HAND_DEFAULT = 0x0,
+	};
+	
+	struct PlayerWeaponCommonState
+	{
+		int offHandIndex;
+		OffhandClass offhandPrimary;
+		OffhandClass offhandSecondary;
+		unsigned int weapon;
+		unsigned int primaryWeaponForAltMode;
+		int weapFlags;
+		float fWeaponPosFrac;
+		float aimSpreadScale;
+		int adsDelayTime;
+		int spreadOverride;
+		int spreadOverrideState;
+		PlayerHandIndex lastWeaponHand;
+		GlobalAmmo ammoNotInClip[15];
+		ClipAmmo ammoInClip[15];
+		int weapLockFlags;
+		int weapLockedEntnum;
+		float weapLockedPos[3];
+		int weaponIdleTime;
+	};
+
+	enum ActionSlotType
+	{
+		ACTIONSLOTTYPE_DONOTHING = 0x0,
+		ACTIONSLOTTYPE_SPECIFYWEAPON = 0x1,
+		ACTIONSLOTTYPE_ALTWEAPONTOGGLE = 0x2,
+		ACTIONSLOTTYPE_NIGHTVISION = 0x3,
+		ACTIONSLOTTYPECOUNT = 0x4,
+	};
+
+	struct ActionSlotParam_SpecifyWeapon
+	{
+		unsigned int index;
+	};
+
+	struct ActionSlotParam
+	{
+		ActionSlotParam_SpecifyWeapon specifyWeapon;
+	};
+
+	enum objectiveState_t
+	{
+		OBJST_EMPTY = 0x0,
+		OBJST_ACTIVE = 0x1,
+		OBJST_INVISIBLE = 0x2,
+		OBJST_DONE = 0x3,
+		OBJST_CURRENT = 0x4,
+		OBJST_FAILED = 0x5,
+		OBJST_NUMSTATES = 0x6,
+	};
+
+	struct objective_t
+	{
+		objectiveState_t state;
+		float origin[3];
+		int entNum;
+		int teamNum;
+		int icon;
+	};
+
+	enum he_type_t
+	{
+		HE_TYPE_FREE = 0x0,
+		HE_TYPE_TEXT = 0x1,
+		HE_TYPE_VALUE = 0x2,
+		HE_TYPE_PLAYERNAME = 0x3,
+		HE_TYPE_MAPNAME = 0x4,
+		HE_TYPE_GAMETYPE = 0x5,
+		HE_TYPE_MATERIAL = 0x6,
+		HE_TYPE_TIMER_DOWN = 0x7,
+		HE_TYPE_TIMER_UP = 0x8,
+		HE_TYPE_TIMER_STATIC = 0x9,
+		HE_TYPE_TENTHS_TIMER_DOWN = 0xA,
+		HE_TYPE_TENTHS_TIMER_UP = 0xB,
+		HE_TYPE_TENTHS_TIMER_STATIC = 0xC,
+		HE_TYPE_CLOCK_DOWN = 0xD,
+		HE_TYPE_CLOCK_UP = 0xE,
+		HE_TYPE_WAYPOINT = 0xF,
+		HE_TYPE_COUNT = 0x10,
+	};
+
+	struct hud_color
+	{
+		char r;
+		char g;
+		char b;
+		char a;
+	};
+
+	union hudelem_color_t
+	{
+		hud_color __s0;
+		int rgba;
+	};
+
+	struct hudelem_s
+	{
+		he_type_t type;
+		float x;
+		float y;
+		float z;
+		int targetEntNum;
+		float fontScale;
+		float fromFontScale;
+		int fontScaleStartTime;
+		int fontScaleTime;
+		int font;
+		int alignOrg;
+		int alignScreen;
+		hudelem_color_t color;
+		hudelem_color_t fromColor;
+		int fadeStartTime;
+		int fadeTime;
+		int label;
+		int width;
+		int height;
+		int materialIndex;
+		int fromWidth;
+		int fromHeight;
+		int scaleStartTime;
+		int scaleTime;
+		float fromX;
+		float fromY;
+		int fromAlignOrg;
+		int fromAlignScreen;
+		int moveStartTime;
+		int moveTime;
+		int time;
+		int duration;
+		float value;
+		int text;
+		float sort;
+		hudelem_color_t glowColor;
+		int fxBirthTime;
+		int fxLetterTime;
+		int fxDecayStartTime;
+		int fxDecayDuration;
+		int soundID;
+		int flags;
+	};
+
+	struct game_hudelem_s
+	{
+		hudelem_s elem;
+		int clientNum;
+		int team;
+		int archived;
+	};
+
+	enum
+	{
+		PMF_PRONE = 1 << 0,
+		PMF_DUCKED = 1 << 1,
+		PMF_MANTLE = 1 << 2,
+		PMF_LADDER = 1 << 3,
+		PMF_SIGHT_AIMING = 1 << 4,
+		PMF_BACKWARDS_RUN = 1 << 5,
+		PMF_WALKING = 1 << 6,
+		PMF_TIME_HARDLANDING = 1 << 7,
+		PMF_TIME_KNOCKBACK = 1 << 8,
+		PMF_PRONEMOVE_OVERRIDDEN = 1 << 9,
+		PMF_RESPAWNED = 1 << 10,
+		PMF_FROZEN = 1 << 11,
+		PMF_LADDER_FALL = 1 << 12,
+		PMF_JUMPING = 1 << 13,
+		PMF_SPRINTING = 1 << 14,
+		PMF_SHELLSHOCKED = 1 << 15,
+		PMF_MELEE_CHARGE = 1 << 16,
+		PMF_NO_SPRINT = 1 << 17,
+		PMF_NO_JUMP = 1 << 18,
+		PMF_REMOTE_CONTROLLING = 1 << 19,
+		PMF_ANIM_SCRIPTED = 1 << 20,
+		PMF_UNK1 = 1 << 21,
+		PMF_DIVING = 1 << 22,
+	};
+
+	enum
+	{
+		POF_INVULNERABLE = 1 << 0,
+		POF_REMOTE_EYES = 1 << 1,
+		POF_LASER_ALTVIEW = 1 << 2,
+		POF_THERMAL_VISION = 1 << 3,
+		POF_THERMAL_VISION_OVERLAY_FOF = 1 << 4,
+		POF_REMOTE_CAMERA_SOUNDS = 1 << 5,
+		POF_ALT_SCENE_REAR_VIEW = 1 << 6,
+		POF_ALT_SCENE_TAG_VIEW = 1 << 7,
+		POF_SHIELD_ATTACHED_TO_WORLD_MODEL = 1 << 8,
+		POF_DONT_LERP_VIEWANGLES = 1 << 9,
+		POF_EMP_JAMMED = 1 << 10,
+		POF_FOLLOW = 1 << 11,
+		POF_PLAYER = 1 << 12,
+		POF_SPEC_ALLOW_CYCLE = 1 << 13,
+		POF_SPEC_ALLOW_FREELOOK = 1 << 14,
+		POF_AC130 = 1 << 15,
+		POF_COMPASS_PING = 1 << 16,
+		POF_ADS_THIRD_PERSON_TOGGLE = 1 << 17,
+	};
+
+	enum pmtype_t
+	{
+		PM_NORMAL = 0x0,
+		PM_NORMAL_LINKED = 0x1,
+		PM_NOCLIP = 0x2,
+		PM_UFO = 0x3,
+		PM_MPVIEWER = 0x4,
+		PM_SPECTATOR = 0x5,
+		PM_INTERMISSION = 0x6,
+		PM_LASTSTAND = 0x7,
+		PM_DEAD = 0x8,
+		PM_DEAD_LINKED = 0x9,
+	};
+
+	enum
+	{
+		EF_NONSOLID_BMODEL = 1 << 0,
+		EF_TELEPORT_BIT = 1 << 1,
+		EF_CROUCHING = 1 << 2,
+		EF_PRONE = 1 << 3,
+		EF_UNK1 = 1 << 4,
+		EF_NODRAW = 1 << 5,
+		EF_TIMED_OBJECT = 1 << 6,
+		EF_VOTED = 1 << 7,
+		EF_TALK = 1 << 8,
+		EF_FIRING = 1 << 9,
+		EF_TURRET_ACTIVE_PRONE = 1 << 10,
+		EF_TURRET_ACTIVE_DUCK = 1 << 11,
+		EF_LOCK_LIGHT_VIS = 1 << 12,
+		EF_AIM_ASSIST = 1 << 13,
+		EF_LOOP_RUMBLE = 1 << 14,
+		EF_LASER_SIGHT = 1 << 15,
+		EF_MANTLE = 1 << 16,
+		EF_DEAD = 1 << 17,
+		EF_ADS = 1 << 18,
+		EF_NEW = 1 << 19,
+		EF_VEHICLE_ACTIVE = 1 << 20,
+		EF_JAMMING = 1 << 21,
+		EF_COMPASS_PING = 1 << 22,
+		EF_SOFT = 1 << 23,
+	};
+
+	enum
+	{
+		PLF_ANGLES_LOCKED = 1 << 0,
+		PLF_USES_OFFSET = 1 << 1,
+		PLF_WEAPONVIEW_ONLY = 1 << 2,
+	};
+
+	enum
+	{
+		PWF_USE_RELOAD = 1 << 0,
+		PWF_USING_OFFHAND = 1 << 1,
+		PWF_HOLDING_BREATH = 1 << 2,
+		PWF_FRIENDLY_FIRE = 1 << 3,
+		PWF_ENEMY_FIRE = 1 << 4,
+		PWF_NO_ADS = 1 << 5,
+		PWF_USING_NIGHTVISION = 1 << 6,
+		PWF_DISABLE_WEAPONS = 1 << 7,
+		PWF_TRIGGER_LEFT_FIRE = 1 << 8,
+		PWF_TRIGGER_DOUBLE_FIRE = 1 << 9,
+		PWF_USING_RECOILSCALE = 1 << 10,
+		PWF_DISABLE_WEAPON_SWAPPING = 1 << 11,
+		PWF_DISABLE_OFFHAND_WEAPONS = 1 << 12,
+		PWF_SWITCHING_TO_RIOTSHIELD = 1 << 13,
+		// IW5 flags backported
+		PWF_DISABLE_WEAPON_PICKUP = 1 << 16
+	};
+
+	struct playerState_s
+	{
+		int commandTime;
+		int pm_type;
+		int pm_time;
+		int pm_flags;
+		int otherFlags;
+		int linkFlags;
+		int bobCycle;
+		float origin[3];
+		float velocity[3];
+		int grenadeTimeLeft;
+		int throwbackGrenadeOwner;
+		int throwbackGrenadeTimeLeft;
+		unsigned int throwbackWeaponIndex;
+		int remoteEyesEnt;
+		int remoteEyesTagname;
+		int remoteControlEnt;
+		int foliageSoundTime;
+		int gravity;
+		float leanf;
+		int speed;
+		float delta_angles[3];
+		int groundEntityNum;
+		float vLadderVec[3];
+		int jumpTime;
+		float jumpOriginZ;
+		int legsTimer;
+		int legsAnim;
+		int torsoTimer;
+		int torsoAnim;
+		int legsAnimDuration;
+		int torsoAnimDuration;
+		int damageTimer;
+		int damageDuration;
+		int flinchYawAnim;
+		int corpseIndex;
+		int movementDir;
+		int eFlags;
+		int eventSequence;
+		int events[4];
+		unsigned int eventParms[4];
+		int oldEventSequence;
+		int unpredictableEventSequence;
+		int unpredictableEventSequenceOld;
+		int unpredictableEvents[4];
+		unsigned int unpredictableEventParms[4];
+		int clientNum; // 260
+		int viewmodelIndex;
+		float viewangles[3];
+		int viewHeightTarget;
+		float viewHeightCurrent;
+		int viewHeightLerpTime;
+		int viewHeightLerpTarget;
+		int viewHeightLerpDown;
+		float viewAngleClampBase[2];
+		float viewAngleClampRange[2];
+		int damageEvent;
+		int damageYaw;
+		int damagePitch;
+		int damageCount;
+		int damageFlags;
+		int stats[4];
+		float proneDirection;
+		float proneDirectionPitch;
+		float proneTorsoPitch;
+		ViewLockTypes viewlocked;
+		int viewlocked_entNum;
+		float linkAngles[3];
+		float linkWeaponAngles[3];
+		int linkWeaponEnt;
+		int loopSound;
+		int cursorHint;
+		int cursorHintString;
+		int cursorHintEntIndex;
+		int cursorHintDualWield;
+		int iCompassPlayerInfo;
+		int radarEnabled;
+		int radarBlocked;
+		int radarMode;
+		int locationSelectionInfo;
+		SprintState sprintState;
+		float holdBreathScale;
+		int holdBreathTimer;
+		float moveSpeedScaleMultiplier;
+		MantleState mantleState;
+		PlayerActiveWeaponState weapState[2];
+		unsigned int weaponsEquipped[15];
+		PlayerEquippedWeaponState weapEquippedData[15];
+		PlayerWeaponCommonState weapCommon;
+		float meleeChargeYaw;
+		int meleeChargeDist;
+		int meleeChargeTime;
+		unsigned int perks[2];
+		unsigned int perkSlots[8];
+		ActionSlotType actionSlotType[4];
+		ActionSlotParam actionSlotParam[4];
+		int weaponHudIconOverrides[6];
+		int animScriptedType;
+		int shellshockIndex;
+		int shellshockTime;
+		int shellshockDuration;
+		float dofNearStart;
+		float dofNearEnd;
+		float dofFarStart;
+		float dofFarEnd;
+		float dofNearBlur;
+		float dofFarBlur;
+		float dofViewmodelStart;
+		float dofViewmodelEnd;
+		objective_t objective[32];
+		int deltaTime;
+		int killCamEntity;
+		int killCamLookAtEntity;
+		int killCamClientNum;
+		struct
+		{
+			hudelem_s current[31];
+			hudelem_s archival[31];
+		} hud;
+		unsigned int partBits[6];
+		int recoilScale;
+		int diveDirection;
+		int stunTime;
+	};
+
+	static_assert(sizeof(playerState_s) == 0x311C);
+	
+	struct gclient_s
+	{
+		playerState_s ps;
+		clientSession_t sess;
+		int flags; // 13204
+		int spectatorClient;
+		int lastCmdTime;
+		int buttons;
+		int oldbuttons; // 13220
+		int latched_buttons; // 13224
+		int buttonsSinceLastFrame; // 13228
+		unsigned char __pad3[324]; // 13232
+		int visionDuration[5];
+		char visionName[5][64];
+		int lastStand;
+		int lastStandTime;
+		int hudElemLastAssignedSoundID;
+		float lockedTargetOffset[3];
+		unsigned __int16 attachShieldTagName;
+		hintType_t hintForcedType;
+		int hintForcedString;
+	};
+	
+	struct gentity_s
+	{
+		entityState_s s;
+		entityShared_t r;
+		gclient_s* client;
 	};
 }
